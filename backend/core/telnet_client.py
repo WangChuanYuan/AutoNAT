@@ -1,4 +1,5 @@
 # encoding: utf-8
+
 import logging
 import telnetlib
 import time
@@ -11,12 +12,11 @@ class TelnetClient(object):
         self.password = password
         self.tn = telnetlib.Telnet()
 
-    # 此函数实现telnet登录主机
-    def login_host(self):
+    def login_host(self) -> bool:
         try:
             self.tn.open(self.ip, port=23)
         except:
-            logging.warning('%s网络连接失败' % self.ip)
+            logging.error(f'{self.ip} 网络连接失败')
             return False
         # 等待login出现后输入用户名，最多等待10秒
         self.tn.read_until(b'login: ', timeout=10)
@@ -33,18 +33,20 @@ class TelnetClient(object):
             print('%s登录成功' % self.ip)
             return True
         else:
-            logging.warning('%s登录失败，用户名或密码错误' % self.ip)
+            logging.error(f'{self.ip} 登录失败，用户名或密码错误')
             return False
 
-    # 退出telnet
     def logout_host(self):
         self.tn.write(b'exit\n')
 
-    # 此函数实现执行传过来的命令，并输出其执行结果
-    def execute_command(self, command):
+    def execute_command(self, command) -> str:
         # 执行命令
         self.tn.write(command.encode('ascii') + b'\n')
         time.sleep(2)
-        # 获取命令结果
-        command_result = self.tn.read_very_eager().decode('ascii')
-        print('命令执行结果：\n%s' % command_result)
+        return self.tn.read_very_eager().decode('ascii')
+
+    def __enter__(self):
+        return self if self.login_host() else None
+
+    def __exit__(self, typ, val, traceback):
+        self.logout_host()
