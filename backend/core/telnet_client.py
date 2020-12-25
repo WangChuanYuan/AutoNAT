@@ -3,8 +3,10 @@ import logging
 import telnetlib
 import time
 
+from core.device import Device
 
-class TelnetClient(object):
+
+class TelnetClient(Device):
     def __init__(self, ip, username, password):
         self.ip = ip
         self.username = username
@@ -24,8 +26,8 @@ class TelnetClient(object):
         # 等待Password出现后输入用户名，最多等待10秒
         self.tn.read_until(b'Password: ', timeout=10)
         self.tn.write(self.password.encode('ascii') + b'\n')
-        # 延时两秒再收取返回结果，给服务端足够响应时间
-        time.sleep(2)
+        # 延时再收取返回结果，给服务端足够响应时间
+        time.sleep(0.5)
         # 获取登录结果
         # read_very_eager()获取到的是的是上次获取之后本次获取之前的所有输出
         command_result = self.tn.read_very_eager().decode('ascii')
@@ -38,13 +40,16 @@ class TelnetClient(object):
 
     # 退出telnet
     def logout_host(self):
-        self.tn.write(b'exit\n')
+        self.tn.close()
+        print('%s已登出' % self.ip)
 
     # 此函数实现执行传过来的命令，并输出其执行结果
     def execute_command(self, command):
+        print(command)
         # 执行命令
         self.tn.write(command.encode('ascii') + b'\n')
-        time.sleep(2)
+        time.sleep(0.5)
         # 获取命令结果
         command_result = self.tn.read_very_eager().decode('ascii')
         print('命令执行结果：\n%s' % command_result)
+        return command_result
