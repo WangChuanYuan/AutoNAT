@@ -1,0 +1,87 @@
+{
+"hostname": "PCA",
+"devices": [
+	{"hostname": "RTA", "type": "ROUTER", "ip": "10.0.0.1", "password": "CISCO"},
+	{"hostname": "RTB", "type": "ROUTER", "ip": "192.168.3.1", "password": "CISCO"},
+	{"hostname": "RTC", "type": "ROUTER", "ip": "10.0.0.2", "password": "CISCO"}
+],
+"command_blocks": [
+	{
+		"device": "PCA",
+		"commands": [
+			"update 10.0.0.11 255.0.0.0"
+		]
+	},
+	{
+		"device": "RTA",
+		"commands": [
+			"enable",
+			"CISCO",
+			"config terminal",
+			"interface s0/0/0",
+			"ip address 192.168.1.2 255.255.255.252",
+			"no shutdown",
+			"exit"
+		]
+	},
+	{
+		"device": "PCA",
+		"commands": [
+			"update 192.168.3.2 255.255.255.0"
+		]
+	},
+	{
+		"device": "RTB",
+		"commands": [
+			"enable",
+			"CISCO",
+			"config terminal",
+			"interface s0/0/0",
+			"ip address 192.168.1.1 255.255.255.252",
+			"no shutdown",
+			"exit",
+			"ip route 192.168.1.32 255.255.255.224 192.168.1.2"
+		]
+	},
+	{
+		"device": "PCA",
+		"commands": [
+			"update 10.0.0.11 255.0.0.0 10.0.0.1"
+		]
+	},
+	{
+		"device": "RTA",
+		"commands": [
+			// "enable",
+			// "CISCO",
+			// "config terminal",
+			"ip route 0.0.0.0 0.0.0.0 192.168.1.1"
+		]
+	},
+	{
+		"device": "RTC",
+		"commands": [
+			"enable",
+			"CISCO",
+			"config terminal",
+			"ip route 0.0.0.0 0.0.0.0 10.0.0.1"
+		]
+	},
+	{
+		"device": "RTA",
+		"commands": [
+			// "enable",
+			// "CISCO",
+			// "config terminal",
+			"ip nat pool globalXYZ 192.168.1.33 192.168.1.57 netmask 255.255.255.224",
+            "access-list 1 permit 10.0.0.0 0.255.255.255",
+            "ip nat inside source list 1 pool globalXYZ overload",
+			"interface f0/0",
+			"ip nat inside",
+			"interface s0/0/0",
+			"ip nat outside",
+			"exit"
+		]
+	}
+]
+}
