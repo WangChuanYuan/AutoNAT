@@ -2,8 +2,8 @@
 import time
 import subprocess
 
-from core.device import Device
-from core.ip_updater import update_host
+from .device import Device
+from .ip_updater import update_host
 
 
 class Commandline(Device):

@@ -8,4 +8,4 @@ if __name__ == '__main__':
     parser.add_argument('mask', help='mask')
     parser.add_argument('--gateway', help='gateway')
     args = parser.parse_args()
-    update_host(args.ip, args.mask, args.gw)
+    update_host(args.ip, args.mask, args.gateway)

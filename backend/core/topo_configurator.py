@@ -6,8 +6,8 @@ except:
     import json
     logging.warning('Json5 not installed, cannot parse json with comments')
 
-from core.cmd_client import Commandline
-from core.telnet_client import TelnetClient
+from .cmd_client import Commandline
+from .telnet_client import TelnetClient
 
 
 class TopoConfigurator(object):
@@ -20,9 +20,9 @@ class TopoConfigurator(object):
         self.command_blocks = config.command_blocks
 
     def _prepare_devices(self, config):
-        self.devices[config.hostname] = Commandline(), False
+        self.devices[config.hostname] = [Commandline(), False]
         for d in config.devices:
-            self.devices[d.hostname] = TelnetClient(ip=d.ip, username='', password=d.password), False
+            self.devices[d.hostname] = [TelnetClient(ip=d.ip, username='', password=d.password), False]
 
     def _close_devices(self):
         for d, _ in self.devices.values():

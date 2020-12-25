@@ -4,7 +4,7 @@ import logging
 import telnetlib
 import time
 
-from core.device import Device
+from .device import Device
 
 
 class TelnetClient(Device):

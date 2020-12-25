@@ -7,9 +7,9 @@ import platform
 
 def update_host(ip, mask, gateway=None, device=None) -> str:
     _lookup_table = {
-        "Windows": _win_update_host,
-        "Linux": _unix_update_host,
-        "Darwin": _mac_update_host,
+        'Windows': _win_update_host,
+        'Linux': _unix_update_host,
+        'Darwin': _mac_update_host,
     }
     try:
         return _lookup_table[platform.system()](ip, mask, gateway=gateway, device=device)
@@ -20,7 +20,7 @@ def update_host(ip, mask, gateway=None, device=None) -> str:
 
 def _win_update_host(ip, mask, gateway=None, device=None):
     if device is None:
-        device = "本地连接"
+        device = '本地连接'
 
     cmd = f'netsh interface ip set address name="{device}" source=static addr={ip} mask={mask}'
     if gateway:
@@ -31,7 +31,10 @@ def _win_update_host(ip, mask, gateway=None, device=None):
     return res
 
 
-def _unix_update_host(ip, mask, gateway=None, device='eth0'):
+def _unix_update_host(ip, mask, gateway=None, device=None):
+    if device is None:
+        device = 'enp0s20f0u3u2'
+
     ip_cmd = 'ifconfig ' + device + ' ' + ip + ' netmask ' + mask
     res = ''
     with os.popen(ip_cmd, 'r') as p:
@@ -47,7 +50,10 @@ def _unix_update_host(ip, mask, gateway=None, device='eth0'):
     return res
 
 
-def _mac_update_host(ip, mask, gateway=None, device='en0'):
+def _mac_update_host(ip, mask, gateway=None, device=None):
+    if device is None:
+        device = 'en0'
+
     ip_cmd = 'ifconfig ' + device + ' ' + ip + ' netmask ' + mask
     res = ''
     with os.popen(ip_cmd, 'r') as p:
