@@ -1,0 +1,68 @@
+{
+  "local_interface": "",
+  "devices": [
+    {
+      "name": "PCA",
+      "addr": "10.0.0.11",
+      "mask": "255.0.0.0",
+      "gateway": "10.0.0.1"
+    },
+    {
+      "name": "PCB",
+      "addr": "192.168.3.2",
+      "mask": "255.255.255.0",
+      "gateway": "192.168.3.1"
+    },
+    {
+      "name": "RTA",
+      "addr": "10.0.0.1",
+      "password": "CISCO"
+    },
+    {
+      "name": "RTC",
+      "addr": "10.0.0.2",
+      "password": "CISCO"
+    }
+  ],
+  "testcases": [
+    {
+      "before": [
+        "as PCA"
+      ],
+      "commands": [
+        "login RTA",
+        "ping 10.0.0.1",
+        "ping 10.0.0.2",
+        "ping 10.0.0.11",
+        "ping 192.168.1.2",
+        "ping 192.168.1.1",
+        "ping 192.168.3.1",
+        "ping 192.168.3.2",
+        "ping 192.168.1.34",
+        "logout",
+
+        "login RTC",
+        "ping 192.168.1.35",
+        "logout",
+
+        "ping 192.168.3.2",
+        "login RTC",
+        "ping 192.168.3.2",
+        "logout",
+
+        "ping 192.168.3.2",
+        "login RTC",
+        "ping 192.168.3.2",
+        "logout"
+      ]
+    },
+    {
+      "before": [
+        "as PCB"
+      ],
+      "commands": [
+        "curl 192.168.1.60"
+      ]
+    }
+  ]
+}

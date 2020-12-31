@@ -6,6 +6,8 @@ import time
 
 from .device import Device
 
+_SLEEP_DURATION = 2
+
 
 class TelnetClient(Device):
     def __init__(self, ip, username, password):
@@ -27,12 +29,12 @@ class TelnetClient(Device):
         self.tn.read_until(b'Password: ', timeout=10)
         self.tn.write(self.password.encode('ascii') + b'\n')
         # 延时再收取返回结果，给服务端足够响应时间
-        time.sleep(0.5)
+        time.sleep(_SLEEP_DURATION)
         # 获取登录结果
         # read_very_eager()获取到的是的是上次获取之后本次获取之前的所有输出
         command_result = self.tn.read_very_eager().decode('ascii')
         if 'Login incorrect' not in command_result:
-            print('%s登录成功' % self.ip)
+            logging.info(f'{self.ip} 登录成功')
             return True
         else:
             logging.error(f'{self.ip} 登录失败，用户名或密码错误')
@@ -47,7 +49,7 @@ class TelnetClient(Device):
         print(command)
         # 执行命令
         self.tn.write(command.encode('ascii') + b'\n')
-        time.sleep(0.5)
+        time.sleep(_SLEEP_DURATION)
         # 获取命令结果
         command_result = self.tn.read_very_eager().decode('ascii')
         print('命令执行结果：\n%s' % command_result)

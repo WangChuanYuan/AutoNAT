@@ -1,8 +1,12 @@
-from flask import Flask, jsonify
-import server
+#!/usr/bin/env python
+
 import asyncio
-import websockets
 import os
+import websockets
+
+from flask import Flask, jsonify
+
+import backend.auto_test_nat
 
 app = Flask(__name__)
 
