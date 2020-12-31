@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import asyncio
 import io
 import json
@@ -5,25 +7,27 @@ import logging
 import websockets
 import os
 
-from backend.core import (update_host, TelnetClient)
+from core import (update_host, TelnetClient)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 
 async def run_tests(ws, path):
-    message = await ws.recv()
+    # await ws.send("hahaha")
 
+    message = await ws.recv()
+    logging.info(f"path: {path}, message: '{message}'")
     if message != "test_NAT":
-        logging.info(f"path: {path}, message: '{message}'")
         await ws.send("error: invalid request")
         return
 
-    with io.open("resources/nat_test.json") as f:
+    with io.open("backend/resources/nat_test.json") as f:
         obj = json.load(f)
         devices = {dev["name"]: dev for dev in obj["devices"]}
         testcases = obj["testcases"]
         local_interface = obj["local_interface"]
 
+    success = True
     for tc in testcases:
         for cmd in tc["before"]:
             tokens = cmd.split()
@@ -35,48 +39,58 @@ async def run_tests(ws, path):
                 raise ValueError(f"unsupported command: '{tokens[0]}'")
 
         client: TelnetClient = None
+        curr_device = "local"
         for cmd in tc["commands"]:
             tokens = cmd.split()
             if tokens[0] == "login":
                 dev = devices[tokens[1]]
                 client = TelnetClient(dev["addr"], "", dev["password"])
                 client.login_host()
+                curr_device = tokens[1]
             elif tokens[0] == "logout":
                 client.logout_host()
                 client = None
+                curr_device = "local"
             elif tokens[0] == "ping":
                 if client is None:
                     # PING from local
                     output = os.popen(f"ping -c 5 {tokens[1]}").read()
+                    success = "0% packet loss" in output
                     await ws.send(json.dumps(
                         {
+                            "device": curr_device,
                             "command": cmd,
-                            "success": "0% packet loss" in output,
-                            "output": output,
+                            # "success": "0% packet loss" in output,
+                            "output": output.strip(),
                         }
                     ))
                 else:
                     output = client.execute_command(cmd)
+                    success = "Success rate is 100 percent" in output
                     await ws.send(json.dumps(
                         {
+                            "device": curr_device,
                             "command": cmd,
-                            "success": "success" in output.lower(),
-                            "output": output,
+                            # "success": "Success rate is 100 percent" in output,
+                            "output": output.strip(),
                         }
                     ))
             elif tokens[0] == "curl":
                 # -I means "header only"
                 output = os.popen(f"curl -I {tokens[1]}").read()
+                success = "200 OK" in output
                 await ws.send(json.dumps(
                     {
+                        "device": curr_device,
                         "command": cmd,
-                        "success": "200 OK" in output,
-                        "output": output,
+                        # "success": "200 OK" in output,
+                        "output": output.strip(),
                     }
                 ))
             else:
                 raise ValueError(f"unsupported command: '{tokens[0]}'")
-
+    await ws.send(json.dumps({"result": success}))
+    logging.info("test done")
 
 # # XYZ 内的主机 A
 # update_host("10.0.0.11", "255.0.0.0", device="")
@@ -105,7 +119,6 @@ async def run_tests(ws, path):
 # # XYZ 外的主机 B
 # update_host("192.168.3.2", "255.255.255.0", "192.168.3.1", device="")
 # await websocket.send(os.popen("curl 192.168.1.60").read())
-
 
 if __name__ == "__main__":
     start_server = websockets.serve(run_tests, "localhost", 8887)

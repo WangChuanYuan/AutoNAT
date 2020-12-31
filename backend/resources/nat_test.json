@@ -1,5 +1,5 @@
 {
-  "local_interface": "",
+  "local_interface": "enp0s20f0u4u4",
   "devices": [
     {
       "name": "PCA",
@@ -61,7 +61,6 @@
         "as PCB"
       ],
       "commands": [
-        "curl 192.168.1.60"
       ]
     }
   ]

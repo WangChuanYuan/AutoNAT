@@ -8,6 +8,8 @@ from .device import Device
 
 _SLEEP_DURATION = 2
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
 
 class TelnetClient(Device):
     def __init__(self, ip, username, password):
@@ -42,17 +44,18 @@ class TelnetClient(Device):
 
     def logout_host(self):
         self.tn.close()
-        print('%s已登出' % self.ip)
+        logging.info('%s 已登出' % self.ip)
 
     # 此函数实现执行传过来的命令，并输出其执行结果
     def execute_command(self, command):
-        print(command)
+        logging.info(f"执行命令：'{command}'")
         # 执行命令
         self.tn.write(command.encode('ascii') + b'\n')
         time.sleep(_SLEEP_DURATION)
         # 获取命令结果
         command_result = self.tn.read_very_eager().decode('ascii')
-        print('命令执行结果：\n%s' % command_result)
+        for_display = "\n".join(f"    {line.strip()}" for line in command_result.split("\n"))
+        logging.info(f'命令执行结果：\n{for_display}')
         return command_result
 
     def __enter__(self):
