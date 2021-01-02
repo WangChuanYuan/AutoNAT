@@ -1,23 +1,20 @@
 import logging
 from addict import Dict
-try:
-    import json5 as json
-except:
-    import json
-    logging.warning('Json5 not installed, cannot parse json with comments')
+import json
 
 from .cmd_client import Commandline
 from .telnet_client import TelnetClient
 
 
 class TopoConfigurator(object):
-    def __init__(self, config):
+    def __init__(self, config, ws=None):
         if isinstance(config, str):
             with open(config) as f:
                 config = Dict(json.load(f))
         self.devices = {}
         self._prepare_devices(config)
         self.command_blocks = config.command_blocks
+        self.ws = ws
 
     def _prepare_devices(self, config):
         self.devices[config.hostname] = [Commandline(), False]
@@ -35,9 +32,17 @@ class TopoConfigurator(object):
             self.devices[hostname][1] = device.login_host()
         return device
 
-    def config(self):
+    async def config(self):
         for block in self.command_blocks:
             device = self._get_device(block.device)
             for command in block.commands:
-                result = device.execute_command(command)
+                output = device.execute_command(command)
+                if self.ws:
+                    await self.ws.send(json.dumps(
+                    {
+                        "device": block.device,
+                        "command": command,
+                        "output": output.strip(),
+                    }
+                ))
         self._close_devices()

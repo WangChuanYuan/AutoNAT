@@ -1,4 +1,3 @@
 addict
-json5
 flask
 websockets

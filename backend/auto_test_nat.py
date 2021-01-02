@@ -7,18 +7,21 @@ import logging
 import websockets
 import os
 
-from core import (update_host, TelnetClient)
+from core import (update_host, TelnetClient, TopoConfigurator)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 
 async def run_tests(ws, path):
-    # await ws.send("hahaha")
-
     message = await ws.recv()
     logging.info(f"path: {path}, message: '{message}'")
-    if message != "test_NAT":
+    if message not in ["config_NAT", "test_NAT"]:
         await ws.send("error: invalid request")
+        return
+
+    if message == "config_NAT":
+        configurator = TopoConfigurator("backend/resources/static_nat_config.json", ws)
+        await configurator.config()
         return
 
     with io.open("backend/resources/nat_test.json") as f:
