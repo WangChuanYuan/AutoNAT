@@ -1,5 +1,5 @@
 {
-  "local_interface": "enp0s20f0u4u4",
+  "local_interface": "enp0s20f0u1u4",
   "devices": [
     {
       "name": "PCA",
@@ -11,7 +11,7 @@
       "name": "PCB",
       "addr": "192.168.3.2",
       "mask": "255.255.255.0",
-      "gateway": "192.168.3.1"
+      "gateway": "192.168.3.4"
     },
     {
       "name": "RTA",
@@ -36,7 +36,6 @@
         "ping 10.0.0.11",
         "ping 192.168.1.2",
         "ping 192.168.1.1",
-        "ping 192.168.3.1",
         "ping 192.168.3.2",
         "ping 192.168.1.34",
         "logout",

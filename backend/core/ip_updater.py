@@ -33,7 +33,7 @@ def _win_update_host(ip, mask, gateway=None, device=None):
 
 def _unix_update_host(ip, mask, gateway=None, device=None):
     if device is None:
-        device = 'enp0s20f0u4u4'
+        device = 'enp0s20f0u1u4'
 
     ip_cmd = 'ifconfig ' + device + ' ' + ip + ' netmask ' + mask
     res = ''
