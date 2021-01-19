@@ -5,7 +5,7 @@ from core import TopoConfigurator
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='Config NAT automatically')
+        description='Config automatically')
     parser.add_argument('config', help='path of config file')
     args = parser.parse_args()
     return args

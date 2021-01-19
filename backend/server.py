@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 import asyncio
+import argparse
 import io
 import json
 import logging
-import websockets
+import websocketss
 import os
 
 from core import (update_host, TelnetClient, TopoConfigurator)
@@ -12,7 +13,10 @@ from core import (update_host, TelnetClient, TopoConfigurator)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 
-async def run_tests(ws, path):
+config_file = "resources/static_nat_config.json"
+test_file = "resources/nat_test.json"
+
+async def run(ws, path):
     while True:
         message = await ws.recv()
         logging.info(f"path: {path}, message: '{message}'")
@@ -21,12 +25,12 @@ async def run_tests(ws, path):
             continue
 
         if message == "config_NAT":
-            configurator = TopoConfigurator("backend/resources/static_nat_config.json", ws)
+            configurator = TopoConfigurator(config_file, ws)
             await configurator.config()
             await ws.send(json.dumps({"result": "配置完成"}))
             continue
 
-        with io.open("backend/resources/nat_test.json") as f:
+        with io.open(test_file) as f:
             obj = json.load(f)
             devices = {dev["name"]: dev for dev in obj["devices"]}
             testcases = obj["testcases"]
@@ -65,7 +69,6 @@ async def run_tests(ws, path):
                             {
                                 "device": curr_device,
                                 "command": cmd,
-                                # "success": "0% packet loss" in output,
                                 "output": output.strip(),
                             }
                         ))
@@ -76,7 +79,6 @@ async def run_tests(ws, path):
                             {
                                 "device": curr_device,
                                 "command": cmd,
-                                # "success": "Success rate is 100 percent" in output,
                                 "output": output.strip(),
                             }
                         ))
@@ -88,7 +90,6 @@ async def run_tests(ws, path):
                         {
                             "device": curr_device,
                             "command": cmd,
-                            # "success": "200 OK" in output,
                             "output": output.strip(),
                         }
                     ))
@@ -97,36 +98,24 @@ async def run_tests(ws, path):
         await ws.send(json.dumps({"result": "测试成功" if success else "测试失败"}))
         logging.info("test done")
 
-# # XYZ 内的主机 A
-# update_host("10.0.0.11", "255.0.0.0", device="")
-# # 测试 RTA 能够 PING 通所有的设备
-# with TelnetClient("10.0.0.1", "", "CISCO") as client:
-#     for addr in ["10.0.0.1", "10.0.0.2", "10.0.0.11", "192.168.1.2", "192.168.1.1", "192.168.3.1", "192.168.3.2"]:
-#         await websocket.send(client.execute_command(f"ping {addr}"))
-#     await websocket.send(client.execute_command("ping 192.168.1.34"))
-#
-# # 测试 RTC
-# with TelnetClient("10.0.0.2", "", "CISCO") as client:
-#     await websocket.send(client.execute_command("ping 192.168.1.35"))
-#
-# # 从主机 A 和 RTC PING 主机 B
-# await websocket.send(os.popen("ping 192.168.3.2").read())
-#
-# with TelnetClient("10.0.0.2", "", "CISCO") as client:
-#     await websocket.send(client.execute_command("ping 192.168.3.2"))
-#
-# # 再次从主机 A 和 RTC PING 主机 B
-# await websocket.send(os.popen("ping 192.168.3.2").read())
-#
-# with TelnetClient("10.0.0.2", "", "CISCO") as client:
-#     await websocket.send(client.execute_command("ping 192.168.3.2"))
-#
-# # XYZ 外的主机 B
-# update_host("192.168.3.2", "255.255.255.0", "192.168.3.1", device="")
-# await websocket.send(os.popen("curl 192.168.1.60").read())
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='Run WebSockets server')
+    parser.add_argument('--config', help='path of config file')
+    parser.add_argument('--test', help='path of test file')
+    args = parser.parse_args()
+    return args
+
 
 if __name__ == "__main__":
-    start_server = websockets.serve(run_tests, "localhost", 8887)
+    args = parse_args()
+    if args.config:
+        config_file = args.config
+    if args.test:
+        test_file = args.test
+
+    start_server = websockets.serve(run, "localhost", 8887)
 
     logging.info("auto test server started")
 
